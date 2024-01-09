@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.annotation.Generated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,6 +28,7 @@ import lombok.Setter;
     "disambiguation"
 })
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
 public class ReleaseGroup {
@@ -140,4 +142,11 @@ public class ReleaseGroup {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "ReleaseGroup{" +
+                "title='" + title + '\'' +
+                ", id='" + id + '\'' +
+                '}';
+    }
 }

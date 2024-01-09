@@ -1,21 +1,14 @@
 
-package com.example;
+package com.cygni.test.musicmashup.models.musicbrainz;
 
+import com.fasterxml.jackson.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+import javax.annotation.Generated;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Generated;
-
-import com.cygni.test.musicmashup.models.musicbrainz.AttributeIds;
-import com.cygni.test.musicmashup.models.musicbrainz.AttributeValues;
-import com.cygni.test.musicmashup.models.musicbrainz.Url;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.AllArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -34,6 +27,7 @@ import lombok.AllArgsConstructor;
     "type"
 })
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
 public class Relation {
@@ -207,4 +201,11 @@ public class Relation {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "Relation{" +
+                "url=" + url +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

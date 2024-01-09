@@ -5,9 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Generated;
-import javax.management.relation.Relation;
 
-import com.cygni.test.musicmashup.models.musicbrainz.BeginArea;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -37,6 +36,7 @@ import lombok.AllArgsConstructor;
     "gender-id"
 })
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
 public class MusicInfo {
@@ -258,4 +258,12 @@ public class MusicInfo {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "MusicInfo{" +
+                " relations=" + relations +
+                ", id='" + id + '\'' +
+                ", releaseGroups=" + releaseGroups +
+                '}';
+    }
 }

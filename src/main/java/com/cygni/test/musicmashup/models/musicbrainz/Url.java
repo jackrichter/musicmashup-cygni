@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -18,6 +19,7 @@ import lombok.AllArgsConstructor;
     "id"
 })
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
 public class Url {
@@ -59,4 +61,11 @@ public class Url {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "Url{" +
+                "resource='" + resource + '\'' +
+                ", id='" + id + '\'' +
+                '}';
+    }
 }

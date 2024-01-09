@@ -1,7 +1,8 @@
 
-package com.cygni.test.musicmashup.models.wikipedia;
+package com.cygni.test.musicmashup.models.wikidata;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -15,46 +16,33 @@ import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "pageid",
-    "ns",
+    "site",
     "title",
-    "extract"
+    "badges"
 })
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
-public class Page {
+public class Enwiki {
 
-    @JsonProperty("pageid")
-    private Integer pageid;
-    @JsonProperty("ns")
-    private Integer ns;
+    @JsonProperty("site")
+    private String site;
     @JsonProperty("title")
     private String title;
-    @JsonProperty("extract")
-    private String extract;
+    @JsonProperty("badges")
+    private List<String> badges;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
 
-    @JsonProperty("pageid")
-    public Integer getPageid() {
-        return pageid;
+    @JsonProperty("site")
+    public String getSite() {
+        return site;
     }
 
-    @JsonProperty("pageid")
-    public void setPageid(Integer pageid) {
-        this.pageid = pageid;
-    }
-
-    @JsonProperty("ns")
-    public Integer getNs() {
-        return ns;
-    }
-
-    @JsonProperty("ns")
-    public void setNs(Integer ns) {
-        this.ns = ns;
+    @JsonProperty("site")
+    public void setSite(String site) {
+        this.site = site;
     }
 
     @JsonProperty("title")
@@ -67,14 +55,14 @@ public class Page {
         this.title = title;
     }
 
-    @JsonProperty("extract")
-    public String getExtract() {
-        return extract;
+    @JsonProperty("badges")
+    public List<String> getBadges() {
+        return badges;
     }
 
-    @JsonProperty("extract")
-    public void setExtract(String extract) {
-        this.extract = extract;
+    @JsonProperty("badges")
+    public void setBadges(List<String> badges) {
+        this.badges = badges;
     }
 
     @JsonAnyGetter
@@ -87,4 +75,13 @@ public class Page {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "Enwiki{" +
+                "site='" + site + '\'' +
+                ", title='" + title + '\'' +
+                ", badges=" + badges +
+                ", additionalProperties=" + additionalProperties +
+                '}';
+    }
 }
