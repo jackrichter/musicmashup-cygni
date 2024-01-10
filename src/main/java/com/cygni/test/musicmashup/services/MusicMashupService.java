@@ -11,7 +11,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.Objects;
 
+@SuppressWarnings("BlockingMethodInNonBlockingContext")
 @Service
 @Data
 public class MusicMashupService {
@@ -38,13 +40,12 @@ public class MusicMashupService {
     }
 
     public Mono<Enwiki> getWikiDataInfo() {
-        String qId = parseWikiDataId(this.getMusicInfoMono().block());
-        String wikiDataUri = new StringBuilder("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=").append(qId)
-                .append("&format=json&props=sitelinks").toString();
+        String qId = parseWikiDataId(Objects.requireNonNull(this.getMusicInfoMono().block(), "Error while retrieving WikiData"));
 
         Mono<Enwiki> enwiki = this.webClient
                 .get()
-                .uri(wikiDataUri)
+                .uri("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + qId +
+                        "&format=json&props=sitelinks")
                 .retrieve()
                 .bodyToMono(Enwiki.class);
 
@@ -55,12 +56,11 @@ public class MusicMashupService {
 
     public Mono<Page> getWikipediaInfo() {
         String encodedTitle = fetchUrlEncodedTitle();
-        String wikipediaUri = new StringBuilder("https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&redirects=true&titles=")
-                .append(encodedTitle).toString();
 
         Mono<Page> page = this.webClient
                 .get()
-                .uri(wikipediaUri)
+                .uri("https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&redirects=true&titles=" +
+                        encodedTitle)
                 .retrieve()
                 .bodyToMono(Page.class);
 
@@ -75,16 +75,17 @@ public class MusicMashupService {
                 .findFirst()
                 .orElse(null);
 
-        Url relationUrl = relation.getUrl();
+        Url relationUrl = Objects.requireNonNull(relation, "No URL available").getUrl();
         String resource = relationUrl.getResource();
-        String qId = resource.substring(resource.lastIndexOf(("/")) + 1, resource.length());
 
-        return qId;
+        return resource.substring(resource.lastIndexOf(("/")) + 1);
     }
 
+    @SuppressWarnings("unchecked")
     private String fetchUrlEncodedTitle() {
         Enwiki enwiki = this.wikiDataMono.block();
-        Map<String, Object> additionalProperties = enwiki.getAdditionalProperties();
+        Map<String, Object> additionalProperties = Objects.requireNonNull(enwiki, "Enwiki link is not available")
+                .getAdditionalProperties();
 
         String returnValue = "";
         for (Map.Entry<String, Object> entry1 : additionalProperties.entrySet()) {
@@ -92,8 +93,8 @@ public class MusicMashupService {
                 Map<String, Object> secondValue = (Map<String, Object>) entry1.getValue();
                 for (Map.Entry<String, Object> entry2 : secondValue.entrySet()) {
                     if (entry2.getKey().startsWith("Q")) {
-                        Map<String, Object> theirdValue = (Map<String, Object>) entry2.getValue();
-                        for (Map.Entry<String, Object> entry3 : theirdValue.entrySet()) {
+                        Map<String, Object> thirdValue = (Map<String, Object>) entry2.getValue();
+                        for (Map.Entry<String, Object> entry3 : thirdValue.entrySet()) {
                             if (entry3.getKey().equalsIgnoreCase("sitelinks")) {
                                 Map<String, Object> links = (Map<String, Object>) entry3.getValue();
                                 for (Map.Entry<String, Object> entry4 : links.entrySet()) {
