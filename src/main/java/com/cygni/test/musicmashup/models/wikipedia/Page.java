@@ -87,4 +87,14 @@ public class Page {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "Page{" +
+                "pageid=" + pageid +
+                ", ns=" + ns +
+                ", title='" + title + '\'' +
+                ", extract='" + extract + '\'' +
+                ", additionalProperties=" + additionalProperties +
+                '}';
+    }
 }
