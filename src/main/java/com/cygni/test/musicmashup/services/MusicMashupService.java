@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @SuppressWarnings("BlockingMethodInNonBlockingContext")
 @Service
@@ -87,36 +88,26 @@ public class MusicMashupService {
         Map<String, Object> additionalProperties = Objects.requireNonNull(enwiki, "Enwiki link is not available")
                 .getAdditionalProperties();
 
-        String returnValue = "";
-        for (Map.Entry<String, Object> entry1 : additionalProperties.entrySet()) {
-            if (entry1.getKey().equalsIgnoreCase("entities")) {
-                Map<String, Object> secondValue = (Map<String, Object>) entry1.getValue();
-                for (Map.Entry<String, Object> entry2 : secondValue.entrySet()) {
-                    if (entry2.getKey().startsWith("Q")) {
-                        Map<String, Object> thirdValue = (Map<String, Object>) entry2.getValue();
-                        for (Map.Entry<String, Object> entry3 : thirdValue.entrySet()) {
-                            if (entry3.getKey().equalsIgnoreCase("sitelinks")) {
-                                Map<String, Object> links = (Map<String, Object>) entry3.getValue();
-                                for (Map.Entry<String, Object> entry4 : links.entrySet()) {
-                                    if (entry4.getKey().equalsIgnoreCase("enwiki")) {
-                                        Map<String, Object> fifthValue = (Map<String, Object>) entry4.getValue();
-                                        for (Map.Entry<String, Object> entry5 : fifthValue.entrySet()) {
-                                            if (entry5.getKey().equalsIgnoreCase("title")) {
-                                                returnValue = (String) entry5.getValue();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // Chain flatMap operations to get the title which is the innermost string value
+        final Optional<Map.Entry<String, Object>> title = additionalProperties.entrySet().stream()
+                .filter(s -> s.getKey().equalsIgnoreCase("entities"))
+                .flatMap(entry1 -> ((Map<String, Object>) entry1.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().startsWith("Q"))
+                .flatMap(entry2 -> ((Map<String, Object>) entry2.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().equalsIgnoreCase("sitelinks"))
+                .flatMap(entry3 -> ((Map<String, Object>) entry3.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().equalsIgnoreCase("enwiki"))
+                .flatMap(entry4 -> ((Map<String, Object>) entry4.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().equalsIgnoreCase("title"))
+                .findFirst();
 
         // URL-encode the title
-        returnValue = returnValue.replace(" ", "+");
+        String encodedTitle = "";
+        if (title.isPresent()) {
+            encodedTitle = title.get().getValue().toString();
+        }
+        encodedTitle = encodedTitle.replace(" ", "+");
 
-        return returnValue;
+        return encodedTitle;
     }
 }
