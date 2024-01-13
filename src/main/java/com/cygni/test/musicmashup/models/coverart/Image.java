@@ -153,4 +153,10 @@ public class Image {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "Image{" +
+                "image='" + image + '\'' +
+                '}';
+    }
 }

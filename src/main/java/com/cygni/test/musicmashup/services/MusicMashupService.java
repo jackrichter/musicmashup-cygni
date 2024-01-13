@@ -1,18 +1,21 @@
 package com.cygni.test.musicmashup.services;
 
+import com.cygni.test.musicmashup.models.coverart.CoverArt;
+import com.cygni.test.musicmashup.models.coverart.Image;
 import com.cygni.test.musicmashup.models.musicbrainz.MusicInfo;
 import com.cygni.test.musicmashup.models.musicbrainz.Relation;
+import com.cygni.test.musicmashup.models.musicbrainz.ReleaseGroup;
 import com.cygni.test.musicmashup.models.musicbrainz.Url;
 import com.cygni.test.musicmashup.models.wikidata.Enwiki;
 import com.cygni.test.musicmashup.models.wikipedia.Page;
 import lombok.Data;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @SuppressWarnings("BlockingMethodInNonBlockingContext")
 @Service
@@ -20,12 +23,16 @@ import java.util.Optional;
 public class MusicMashupService {
 
     private WebClient webClient;
+    private RestTemplate restTemplate;
     private Mono<MusicInfo> musicInfoMono;
     private Mono<Enwiki> wikiDataMono;
     private Mono<Page> wikipediaMono;
+    private final List<ReleaseGroup> releaseGroupList = new ArrayList<>();
+    private List<Image> imageList = new ArrayList<>();
 
-    public MusicMashupService(WebClient webClient) {
+    public MusicMashupService(WebClient webClient, RestTemplate restTemplate) {
         this.webClient = webClient;
+        this.restTemplate = restTemplate;
     }
 
     public Mono<MusicInfo> getMusicBrainzInfo(String mbId) {
@@ -70,6 +77,27 @@ public class MusicMashupService {
         return page;
     }
 
+    public void getCoverArtInfo() {
+        // Fetch CoverArt MBIDs
+        final List<String> mbidList = fetchMBIDForCoverArt();
+
+        // Construct the Covert Art's URLs
+        final List<String> coverArtURLList  = mbidList.stream()
+                .map(s -> "https://coverartarchive.org/release-group/" + s)
+                .toList();
+
+        // Get max two coverArt objects in order to avoid long waiting time in the application
+        int max = Math.min(coverArtURLList.size(), 2);
+        List<CoverArt> coverArtList = new ArrayList<>();
+        for (int i = 0; i < max; i++) {
+            try {
+                coverArtList.add(this.restTemplate.getForObject(coverArtURLList.get(i), CoverArt.class));
+            } catch (HttpClientErrorException e) {
+                System.out.println("There is an error in the URL: " + coverArtURLList.get(i));
+            }
+        }
+    }
+
     private String parseWikiDataId(MusicInfo musicInfo) {
         final Relation relation = musicInfo.getRelations().stream()
                 .filter(x -> x.getType().equalsIgnoreCase("wikidata"))
@@ -109,5 +137,13 @@ public class MusicMashupService {
         encodedTitle = encodedTitle.replace(" ", "+");
 
         return encodedTitle;
+    }
+
+    private List<String> fetchMBIDForCoverArt() {
+        // Get all ReleaseGroup objects and extract it's MBIDs
+        releaseGroupList.addAll(Objects.requireNonNull(getMusicInfoMono().block()).getReleaseGroups());
+        return releaseGroupList.stream()
+                .map(ReleaseGroup::getId)
+                .toList();
     }
 }

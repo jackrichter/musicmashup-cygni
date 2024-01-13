@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -19,6 +20,7 @@ import lombok.AllArgsConstructor;
     "release"
 })
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Generated("jsonschema2pojo")
 public class CoverArt {
@@ -60,4 +62,12 @@ public class CoverArt {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return "CoverArt{" +
+                "images=" + images +
+                ", release='" + release + '\'' +
+                ", additionalProperties=" + additionalProperties +
+                '}';
+    }
 }

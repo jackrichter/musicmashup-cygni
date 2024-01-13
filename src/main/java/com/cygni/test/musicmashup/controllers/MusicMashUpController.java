@@ -1,5 +1,6 @@
 package com.cygni.test.musicmashup.controllers;
 
+import com.cygni.test.musicmashup.models.coverart.Image;
 import com.cygni.test.musicmashup.services.MusicMashupService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,8 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-//import java.util.Objects;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/music")
@@ -27,6 +29,7 @@ public class MusicMashUpController {
 //        System.out.println(Objects.requireNonNull(service.getWikiDataInfo().block()));
         service.getWikipediaInfo().subscribe();
 //        System.out.println(Objects.requireNonNull(service.getWikipediaInfo().block()).getAdditionalProperties());
+        service.getCoverArtInfo();
 
         return new ResponseEntity<>("This is a Responce", HttpStatus.OK);
     }
