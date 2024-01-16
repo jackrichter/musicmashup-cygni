@@ -1,0 +1,5 @@
+# Created at 2024-01-16T14:50:48.417
+Boot Manifest-JAR contains absolute paths in classpath 'D:\Cygni-Test\musicmashup\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
