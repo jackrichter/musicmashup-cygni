@@ -18,3 +18,9 @@ Further, the following third-party libraries are used:
 Developing is done in IntelliJ.
 
 ## Running the Application - Backend
+By cloning the code from GitHub, one has access to a runnable jar file.
+Run the application from the command prompt: java -jar target/musicmashup-0.0.1-SNAPSHOT.jar
+After starting the app the user invokes the exposed REST endpoint by using, for example, curl
+form the command prompt, using a given MBID:
+curl  http://localhost:8181/music/musicbrainz/5b11f4ce-a62d-471e-81fc-a69a8278c7da
+or Postman.
