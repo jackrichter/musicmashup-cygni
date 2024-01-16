@@ -1,14 +1,15 @@
 package com.cygni.test.musicmashup.services;
 
-import com.cygni.test.musicmashup.models.coverart.CoverArt;
 import com.cygni.test.musicmashup.models.coverart.Image;
 import com.cygni.test.musicmashup.models.musicbrainz.MusicInfo;
 import com.cygni.test.musicmashup.models.musicbrainz.Relation;
 import com.cygni.test.musicmashup.models.musicbrainz.ReleaseGroup;
 import com.cygni.test.musicmashup.models.musicbrainz.Url;
+import com.cygni.test.musicmashup.models.response.DetailedResponse;
 import com.cygni.test.musicmashup.models.wikidata.Enwiki;
 import com.cygni.test.musicmashup.models.wikipedia.Page;
 import lombok.Data;
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -16,10 +17,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-@SuppressWarnings("BlockingMethodInNonBlockingContext")
-@Service
 @Data
+@Service
+@SuppressWarnings("ALL")
 public class MusicMashupService {
 
     private WebClient webClient;
@@ -27,12 +29,14 @@ public class MusicMashupService {
     private Mono<MusicInfo> musicInfoMono;
     private Mono<Enwiki> wikiDataMono;
     private Mono<Page> wikipediaMono;
+    private DetailedResponse response;
     private final List<ReleaseGroup> releaseGroupList = new ArrayList<>();
-    private List<Image> imageList = new ArrayList<>();
+    private final List<String> imageUrlList = new ArrayList<>();
 
-    public MusicMashupService(WebClient webClient, RestTemplate restTemplate) {
+    public MusicMashupService(WebClient webClient, RestTemplate restTemplate, DetailedResponse detailedResponse) {
         this.webClient = webClient;
         this.restTemplate = restTemplate;
+        this.response = detailedResponse;
     }
 
     public Mono<MusicInfo> getMusicBrainzInfo(String mbId) {
@@ -43,6 +47,9 @@ public class MusicMashupService {
                 .bodyToMono(MusicInfo.class);
 
         this.setMusicInfoMono(info);
+
+        // Extract ReleaseGroup object, but restricted to two objects only! In order to save time and make the app more reactive
+        getTwoReleageGroupObjects();
 
         return info;
     }
@@ -86,16 +93,57 @@ public class MusicMashupService {
                 .map(s -> "https://coverartarchive.org/release-group/" + s)
                 .toList();
 
-        // Get max two coverArt objects in order to avoid long waiting time in the application
-        int max = Math.min(coverArtURLList.size(), 2);
-        List<CoverArt> coverArtList = new ArrayList<>();
-        for (int i = 0; i < max; i++) {
+        // Get max two Image objects in order to avoid long waiting time in the application
+        List<Image> imageObjectList = new ArrayList<>();
+        for (String s : coverArtURLList) {
+            // Some urls in CovertArt service are incorrect
             try {
-                coverArtList.add(this.restTemplate.getForObject(coverArtURLList.get(i), CoverArt.class));
+                imageObjectList.add(this.restTemplate.getForObject(s, Image.class));
             } catch (HttpClientErrorException e) {
-                System.out.println("There is an error in the URL: " + coverArtURLList.get(i));
+                System.out.println("There is an error in the URL: " + s);
             }
         }
+
+        // We only need the Image url string found in the additionalProperties map
+        for (Image obj : imageObjectList) {
+            List<String> result = getFirstImageUrl(obj.getAdditionalProperties());
+            System.out.println(result);
+        }
+    }
+
+    public DetailedResponse getResponse() {
+
+        // Set MBID
+        this.response.setMbid(this.musicInfoMono.block().getId());
+
+        // Set Description
+        Map<String, Object> wikipidiaMap = this.wikipediaMono.block().getAdditionalProperties();
+        this.response.setDescription(this.getArtistDescription(wikipidiaMap));
+
+        // Create and set Album objects (populated, as yet, only with image data) into the Albums list
+//        List<Album> albumList = this.imageList.stream()
+//                .flatMap(data -> data.getImages().stream())
+//                .map(image -> {
+//                    Album album = new Album();
+//                    album.setImage(image.getImage());
+//                    return album;
+//                })
+//                .toList();
+
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getFirstImageUrl(Map<String, Object> outerMap) {
+
+        // Retrieve the first image url, only, from each Image object
+        return outerMap.entrySet().stream()
+                .filter(s -> s.getKey().equalsIgnoreCase("images"))
+                .flatMap(t -> ((List<Map<String, Object>>)t.getValue()).stream())
+                .map(t -> t.get("image").toString())
+                .limit(1)
+                .toList();
     }
 
     private String parseWikiDataId(MusicInfo musicInfo) {
@@ -110,7 +158,6 @@ public class MusicMashupService {
         return resource.substring(resource.lastIndexOf(("/")) + 1);
     }
 
-    @SuppressWarnings("unchecked")
     private String fetchUrlEncodedTitle() {
         Enwiki enwiki = this.wikiDataMono.block();
         Map<String, Object> additionalProperties = Objects.requireNonNull(enwiki, "Enwiki link is not available")
@@ -139,9 +186,47 @@ public class MusicMashupService {
         return encodedTitle;
     }
 
+    private String getArtistDescription(Map<String, Object> wikipidiaInfoMap) {
+
+        // Chain flatMap operations to get the description which is the innermost string value
+        final Optional<Object> value = wikipidiaInfoMap.entrySet().stream()
+                .filter(s -> s.getKey().equalsIgnoreCase("query"))
+                .flatMap(entry1 -> ((Map<String, Object>) entry1.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().equalsIgnoreCase("pages"))
+                .flatMap(entry2 -> ((Map<String, Object>) entry2.getValue()).entrySet().stream())
+                .filter(s -> Character.isDigit(s.getKey().charAt(0)))
+                .flatMap(entry3 -> ((Map<String, Object>) entry3.getValue()).entrySet().stream())
+                .filter(s -> s.getKey().equalsIgnoreCase("extract"))
+                .map(Map.Entry::getValue)
+                .findFirst();
+
+        // Remove multiple newLines and Html tags
+        String description = "";
+        if (value.isPresent()) {
+            description = value.get().toString();
+            description.replaceAll("\n", "");
+            description = Jsoup.parse(description).text();
+        }
+
+        return description;
+    }
+
+    /**
+     * This action regulates the final response scope for this application to two Albums only!
+     * Due to the very long time it takes for each CoverArt service call.
+     * Thus, for this application demonstration, it is enough with two albums.
+     */
+    private void getTwoReleageGroupObjects() {
+        final List<ReleaseGroup> releaseGroups = getMusicInfoMono().block().getReleaseGroups()
+                .stream()
+                .limit(2)
+                .collect(Collectors.toList());
+
+        this.releaseGroupList.addAll(releaseGroups);
+    }
+
     private List<String> fetchMBIDForCoverArt() {
-        // Get all ReleaseGroup objects and extract it's MBIDs
-        releaseGroupList.addAll(Objects.requireNonNull(getMusicInfoMono().block()).getReleaseGroups());
+        // Get MBID from the ReleaseGroup objects
         return releaseGroupList.stream()
                 .map(ReleaseGroup::getId)
                 .toList();
