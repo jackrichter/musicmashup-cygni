@@ -1,5 +1,6 @@
 package com.cygni.test.musicmashup;
 
+import com.cygni.test.musicmashup.models.response.DetailedResponse;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,11 @@ public class MusicmashupApplication {
 	@Bean
 	public RestTemplate getRestTemplate() {
 		return new RestTemplate();
+	}
+
+	@Bean
+	public DetailedResponse getDetailedResponse() {
+		return  new DetailedResponse();
 	}
 
 	public static void main(String[] args) {

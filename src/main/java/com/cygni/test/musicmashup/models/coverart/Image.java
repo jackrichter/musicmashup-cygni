@@ -157,6 +157,8 @@ public class Image {
     public String toString() {
         return "Image{" +
                 "image='" + image + '\'' +
+                ", types=" + types +
+                ", additionalProperties=" + additionalProperties +
                 '}';
     }
 }

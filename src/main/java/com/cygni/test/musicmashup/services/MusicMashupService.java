@@ -5,6 +5,7 @@ import com.cygni.test.musicmashup.models.musicbrainz.MusicInfo;
 import com.cygni.test.musicmashup.models.musicbrainz.Relation;
 import com.cygni.test.musicmashup.models.musicbrainz.ReleaseGroup;
 import com.cygni.test.musicmashup.models.musicbrainz.Url;
+import com.cygni.test.musicmashup.models.response.Album;
 import com.cygni.test.musicmashup.models.response.DetailedResponse;
 import com.cygni.test.musicmashup.models.wikidata.Enwiki;
 import com.cygni.test.musicmashup.models.wikipedia.Page;
@@ -39,21 +40,32 @@ public class MusicMashupService {
         this.response = detailedResponse;
     }
 
+    /**
+     * Handle MusicBrainz API call, non-blocking, asynchrounosly.
+     *
+     * @param mbId
+     * @return a single reactive object
+     */
     public Mono<MusicInfo> getMusicBrainzInfo(String mbId) {
-        Mono<MusicInfo> info = this.webClient
+        Mono<MusicInfo> infoMono = this.webClient
                 .get()
                 .uri("https://musicbrainz.org/ws/2/artist/" + mbId + "?&fmt=json&inc=url-rels+release-groups")
                 .retrieve()
                 .bodyToMono(MusicInfo.class);
 
-        this.setMusicInfoMono(info);
+        this.setMusicInfoMono(infoMono);
 
         // Extract ReleaseGroup object, but restricted to two objects only! In order to save time and make the app more reactive
         getTwoReleageGroupObjects();
 
-        return info;
+        return infoMono;
     }
 
+    /**
+     * Handle WikiData API call, non-blocking, asynchrounosly.
+     *
+     * @return a single reactive object
+     */
     public Mono<Enwiki> getWikiDataInfo() {
         String qId = parseWikiDataId(Objects.requireNonNull(this.getMusicInfoMono().block(), "Error while retrieving WikiData"));
 
@@ -69,7 +81,13 @@ public class MusicMashupService {
         return enwiki;
     }
 
+    /**
+     * Handle Wikipedia API call, non-blocking, asynchrounosly.
+     *
+     * @return a single reactive object
+     */
     public Mono<Page> getWikipediaInfo() {
+        // We need to URL-encode the Title before using it
         String encodedTitle = fetchUrlEncodedTitle();
 
         Mono<Page> page = this.webClient
@@ -84,6 +102,10 @@ public class MusicMashupService {
         return page;
     }
 
+    /**
+     * Handle the CoverArt API call, synchronously.
+     * The reactive Webclient in Spring's WebFlux project cannot handle redirections at this point!
+     */
     public void getCoverArtInfo() {
         // Fetch CoverArt MBIDs
         final List<String> mbidList = fetchMBIDForCoverArt();
@@ -107,10 +129,13 @@ public class MusicMashupService {
         // We only need the Image url string found in the additionalProperties map
         for (Image obj : imageObjectList) {
             List<String> result = getFirstImageUrl(obj.getAdditionalProperties());
-            System.out.println(result);
+            this.imageUrlList.addAll(result);
         }
     }
 
+    /**
+     * Build the response of all the services calls.
+     */
     public DetailedResponse getResponse() {
 
         // Set MBID
@@ -120,20 +145,33 @@ public class MusicMashupService {
         Map<String, Object> wikipidiaMap = this.wikipediaMono.block().getAdditionalProperties();
         this.response.setDescription(this.getArtistDescription(wikipidiaMap));
 
-        // Create and set Album objects (populated, as yet, only with image data) into the Albums list
-//        List<Album> albumList = this.imageList.stream()
-//                .flatMap(data -> data.getImages().stream())
-//                .map(image -> {
-//                    Album album = new Album();
-//                    album.setImage(image.getImage());
-//                    return album;
-//                })
-//                .toList();
+        // Create Album objects list and add just image urls in this step
+        List<Album> albumList = this.imageUrlList.stream()
+                .map(imageUrl -> {
+                    Album album = new Album();
+                    album.setImage(imageUrl);
+                    return album;
+                })
+                .toList();
 
+        // Set rest of data into each album
+        for (int i = 0; i < albumList.size(); i++) {
+            albumList.get(i).setId(releaseGroupList.get(1).getId());
+            albumList.get(i).setTitle(releaseGroupList.get(i).getTitle());
+        }
 
-        return null;
+        // Add list of album to Response
+        this.response.setAlbums(albumList);
+
+        return response;
     }
 
+    /**
+     * Help method to handle extracting the first image url of each Image object.
+     *
+     * @param outerMap
+     * @return List of image url string
+     */
     @SuppressWarnings("unchecked")
     private List<String> getFirstImageUrl(Map<String, Object> outerMap) {
 
@@ -146,6 +184,12 @@ public class MusicMashupService {
                 .toList();
     }
 
+    /**
+     * Parse out the "Q-Id" needed for calling the WikiData API.
+     *
+     * @param musicInfo
+     * @return the Q-Id value
+     */
     private String parseWikiDataId(MusicInfo musicInfo) {
         final Relation relation = musicInfo.getRelations().stream()
                 .filter(x -> x.getType().equalsIgnoreCase("wikidata"))
@@ -158,6 +202,12 @@ public class MusicMashupService {
         return resource.substring(resource.lastIndexOf(("/")) + 1);
     }
 
+    /**
+     * Parse the enWiki data structure and extract the artist's Title.
+     * The parsed title has to be URL-encoded in order to use it to call the Wikipedia API.
+     *
+     * @return the URL-encoded title
+     */
     private String fetchUrlEncodedTitle() {
         Enwiki enwiki = this.wikiDataMono.block();
         Map<String, Object> additionalProperties = Objects.requireNonNull(enwiki, "Enwiki link is not available")
@@ -186,6 +236,12 @@ public class MusicMashupService {
         return encodedTitle;
     }
 
+    /**
+     * Parse the Wikipedia's description of the artist.
+     *
+     * @param wikipidiaInfoMap
+     * @return the sought description
+     */
     private String getArtistDescription(Map<String, Object> wikipidiaInfoMap) {
 
         // Chain flatMap operations to get the description which is the innermost string value
@@ -225,6 +281,11 @@ public class MusicMashupService {
         this.releaseGroupList.addAll(releaseGroups);
     }
 
+    /**
+     * Helper method to extract the MBID for calling the CoverArt API.
+     *
+     * @return MBID
+     */
     private List<String> fetchMBIDForCoverArt() {
         // Get MBID from the ReleaseGroup objects
         return releaseGroupList.stream()
