@@ -7,9 +7,9 @@ The information can refer to an artist or a band.
 The user must provide a valid MBID (MusicBrainz Identifier) to retrieve the information.
 
 ## The Application - Backend
-This application is developed using Java, by the Spring Boot 3 framework.
+This application is developed using Java, with the Spring 6 framework and the Spring Boot 3 tool.
 The development adopted the Reactive paradigm, as much as it was possible,
-intending to communicate with the external APIs in an asynchronously, non-blocking, way
+intending to communicate with the external APIs in an asynchronous, non-blocking, way
 thus seeking to diminish latency wait time.
 Further, the following third-party libraries are used:
 - Maven 3.9.6
