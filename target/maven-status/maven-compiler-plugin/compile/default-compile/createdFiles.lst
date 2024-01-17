@@ -8,8 +8,8 @@ com\cygni\test\musicmashup\models\wikidata\Enwiki.class
 com\cygni\test\musicmashup\controllers\MusicMashUpController.class
 com\cygni\test\musicmashup\models\coverart\CoverArt.class
 com\cygni\test\musicmashup\models\musicbrainz\AttributeValues.class
-com\cygni\test\musicmashup\models\response\DetailedResponse.class
 com\cygni\test\musicmashup\models\musicbrainz\ReleaseGroup.class
+com\cygni\test\musicmashup\models\response\DetailedResponse.class
 com\cygni\test\musicmashup\models\response\Album.class
 com\cygni\test\musicmashup\models\musicbrainz\Area.class
 com\cygni\test\musicmashup\models\musicbrainz\Relation.class

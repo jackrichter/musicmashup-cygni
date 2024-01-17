@@ -32,6 +32,7 @@ public class MusicMashUpController {
 
         // Build the response object
         DetailedResponse response = service.getResponse();
+        System.out.println(response);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
