@@ -3,6 +3,7 @@ package com.cygni.test.musicmashup.controllers;
 import com.cygni.test.musicmashup.models.response.DetailedResponse;
 import com.cygni.test.musicmashup.services.MusicMashupService;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,9 @@ public class MusicMashUpController {
 
         // Services called asynchronously, non-blocking
         service.getMusicBrainzInfo(mbId).subscribe();
+//        System.out.println(service.getMusicInfoMono().block());
         service.getWikiDataInfo().subscribe();
+//        System.out.println(service.getWikiDataInfo().block());
         service.getWikipediaInfo().subscribe();
 
         // Service called synchronously
@@ -32,8 +35,9 @@ public class MusicMashUpController {
 
         // Build the response object
         DetailedResponse response = service.getResponse();
-        System.out.println(response);
+//        System.out.println(response);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+//        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 }

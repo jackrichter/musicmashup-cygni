@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class MusicMashupService {
         this.setMusicInfoMono(infoMono);
 
         // Extract ReleaseGroup object, but restricted to two objects only! In order to save time and make the app more reactive
-        getTwoReleageGroupObjects();
+        getTwoReleaseGroupObjects();
 
         return infoMono;
     }
@@ -137,9 +138,10 @@ public class MusicMashupService {
      * Build the response of all the services calls.
      */
     public DetailedResponse getResponse() {
-
+        MusicInfo musicInfo = getMusicInfoMono().block(Duration.ofMillis(1000));
         // Set MBID
-        this.response.setMbid(this.musicInfoMono.block().getId());
+//        this.response.setMbid(this.musicInfoMono.block().getId());
+        this.response.setMbid(Objects.requireNonNull(musicInfo, "Error getting musicInfo").getId());
 
         // Set Description
         Map<String, Object> wikipidiaMap = this.wikipediaMono.block().getAdditionalProperties();
@@ -209,7 +211,7 @@ public class MusicMashupService {
      * @return the URL-encoded title
      */
     private String fetchUrlEncodedTitle() {
-        Enwiki enwiki = this.wikiDataMono.block();
+        Enwiki enwiki = this.wikiDataMono.block(Duration.ofMillis(1000));
         Map<String, Object> additionalProperties = Objects.requireNonNull(enwiki, "Enwiki link is not available")
                 .getAdditionalProperties();
 
@@ -272,8 +274,10 @@ public class MusicMashupService {
      * Due to the very long time it takes for each CoverArt service call.
      * Thus, for this application demonstration, it is enough with two albums.
      */
-    private void getTwoReleageGroupObjects() {
-        final List<ReleaseGroup> releaseGroups = getMusicInfoMono().block().getReleaseGroups()
+    private void getTwoReleaseGroupObjects() {
+        MusicInfo musicInfo = getMusicInfoMono().block(Duration.ofMillis(1000));
+//        final List<ReleaseGroup> releaseGroups = getMusicInfoMono().block().getReleaseGroups()
+        final List<ReleaseGroup> releaseGroups = Objects.requireNonNull(musicInfo, "Could not get musicInfo").getReleaseGroups()
                 .stream()
                 .limit(2)
                 .collect(Collectors.toList());
