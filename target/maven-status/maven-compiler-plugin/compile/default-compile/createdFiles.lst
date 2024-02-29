@@ -1,4 +1,5 @@
 com\cygni\test\musicmashup\models\musicbrainz\Url.class
+com\cygni\test\musicmashup\MusicmashupApplication$1.class
 com\cygni\test\musicmashup\models\wikipedia\Page.class
 com\cygni\test\musicmashup\models\coverart\Thumbnails.class
 com\cygni\test\musicmashup\services\MusicMashupService.class
