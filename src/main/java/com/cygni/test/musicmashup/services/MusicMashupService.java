@@ -32,8 +32,9 @@ public class MusicMashupService {
     private Mono<Enwiki> wikiDataMono;
     private Mono<Page> wikipediaMono;
     private DetailedResponse response;
-    private final List<ReleaseGroup> releaseGroupList = new ArrayList<>();
-    private final List<String> imageUrlList = new ArrayList<>();
+    private List<ReleaseGroup> releaseGroupList = new ArrayList<>();
+    private List<String> imageUrlList = new ArrayList<>();
+    private List<Album> albumList = new ArrayList<>();
 
     public MusicMashupService(WebClient webClient, RestTemplate restTemplate, DetailedResponse detailedResponse) {
         this.webClient = webClient;
@@ -144,11 +145,11 @@ public class MusicMashupService {
         this.response.setMbid(Objects.requireNonNull(musicInfo, "Error getting musicInfo").getId());
 
         // Set Description
-        Map<String, Object> wikipidiaMap = this.wikipediaMono.block().getAdditionalProperties();
+        Map<String, Object> wikipidiaMap = this.wikipediaMono.block(Duration.ofMillis(1000)).getAdditionalProperties();
         this.response.setDescription(this.getArtistDescription(wikipidiaMap));
 
         // Create Album objects list and add just image urls in this step
-        List<Album> albumList = this.imageUrlList.stream()
+        this.albumList = this.imageUrlList.stream()
                 .map(imageUrl -> {
                     Album album = new Album();
                     album.setImage(imageUrl);
@@ -157,13 +158,13 @@ public class MusicMashupService {
                 .toList();
 
         // Set rest of data into each album
-        for (int i = 0; i < albumList.size(); i++) {
-            albumList.get(i).setId(releaseGroupList.get(1).getId());
-            albumList.get(i).setTitle(releaseGroupList.get(i).getTitle());
+        for (int i = 0; i < this.albumList.size(); i++) {
+            this.albumList.get(i).setId(this.releaseGroupList.get(i).getId());
+            this.albumList.get(i).setTitle(this.releaseGroupList.get(i).getTitle());
         }
 
         // Add list of album to Response
-        this.response.setAlbums(albumList);
+        this.response.setAlbums(this.albumList);
 
         return response;
     }
@@ -295,5 +296,16 @@ public class MusicMashupService {
         return releaseGroupList.stream()
                 .map(ReleaseGroup::getId)
                 .toList();
+    }
+
+    /**
+     * The Axios get() call causes IndexOutOfBounds exception.
+     * This solves the problem.
+     */
+    public void resetArrays() {
+        this.releaseGroupList = new ArrayList<>();
+        this.imageUrlList = new ArrayList<>();
+        this.albumList = new ArrayList<>();
+        System.gc();
     }
 }

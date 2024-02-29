@@ -3,15 +3,11 @@ package com.cygni.test.musicmashup.controllers;
 import com.cygni.test.musicmashup.models.response.DetailedResponse;
 import com.cygni.test.musicmashup.services.MusicMashupService;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+//@CrossOrigin("*")
 @RestController
 @RequestMapping("/music")
 @AllArgsConstructor
@@ -36,6 +32,9 @@ public class MusicMashUpController {
         // Build the response object
         DetailedResponse response = service.getResponse();
 //        System.out.println(response);
+
+        // Avoid IndexOutOfBounds exception caused by Axios call
+        service.resetArrays();
 
 //        return new ResponseEntity<>(response, HttpStatus.OK);
         return ResponseEntity.ok(response);
