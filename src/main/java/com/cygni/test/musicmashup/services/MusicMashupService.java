@@ -141,7 +141,6 @@ public class MusicMashupService {
     public DetailedResponse getResponse() {
         MusicInfo musicInfo = getMusicInfoMono().block(Duration.ofMillis(1000));
         // Set MBID
-//        this.response.setMbid(this.musicInfoMono.block().getId());
         this.response.setMbid(Objects.requireNonNull(musicInfo, "Error getting musicInfo").getId());
 
         // Set Description
@@ -159,8 +158,8 @@ public class MusicMashupService {
 
         // Set rest of data into each album
         for (int i = 0; i < this.albumList.size(); i++) {
-            this.albumList.get(i).setId(this.releaseGroupList.get(i).getId());
-            this.albumList.get(i).setTitle(this.releaseGroupList.get(i).getTitle());
+                this.albumList.get(i).setId(this.releaseGroupList.get(i).getId());
+                this.albumList.get(i).setTitle(this.releaseGroupList.get(i).getTitle());
         }
 
         // Add list of album to Response
@@ -277,7 +276,6 @@ public class MusicMashupService {
      */
     private void getTwoReleaseGroupObjects() {
         MusicInfo musicInfo = getMusicInfoMono().block(Duration.ofMillis(1000));
-//        final List<ReleaseGroup> releaseGroups = getMusicInfoMono().block().getReleaseGroups()
         final List<ReleaseGroup> releaseGroups = Objects.requireNonNull(musicInfo, "Could not get musicInfo").getReleaseGroups()
                 .stream()
                 .limit(2)
