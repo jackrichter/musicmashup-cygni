@@ -24,3 +24,10 @@ After starting the app the user invokes the exposed REST endpoint by using, for 
 form the command prompt, using a given MBID:
 curl  http://localhost:8181/music/musicbrainz/5b11f4ce-a62d-471e-81fc-a69a8278c7da
 or Postman.
+
+## Running the Application from the browser:
+A front end was added to this application.
+See instructions on running the app in the README.md file
+in the "musicmashup-react" repo at:
+https://github.com/jackrichter/musicmashup-react/tree/main
+
